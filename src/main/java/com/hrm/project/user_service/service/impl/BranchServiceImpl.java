@@ -1,7 +1,7 @@
 package com.hrm.project.user_service.service.impl;
 
-import com.hrm.project.user_service.JsonUtils;
-import com.hrm.project.user_service.ResourceAlreadyExistsException;
+import com.hrm.project.user_service.utils.JsonUtils;
+import com.hrm.project.user_service.exceptions.ResourceAlreadyExistsException;
 import com.hrm.project.user_service.assembler.BranchAssembler;
 import com.hrm.project.user_service.dto.BranchDto;
 import com.hrm.project.user_service.dto.PagerDto;
