@@ -1,6 +1,5 @@
 package com.hrm.project.user_service.exceptions;
 
-import com.hrm.project.user_service.ResourceAlreadyExistsException;
 import com.hrm.project.user_service.dto.ErrorDetailsDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;

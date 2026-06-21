@@ -1,6 +1,6 @@
 package com.hrm.project.user_service.service.impl;
 
-import com.hrm.project.user_service.ResourceAlreadyExistsException;
+import com.hrm.project.user_service.exceptions.ResourceAlreadyExistsException;
 import com.hrm.project.user_service.dto.OrganizationDto;
 import com.hrm.project.user_service.dto.OrganizationUpdateDto;
 import com.hrm.project.user_service.dto.PagerDto;

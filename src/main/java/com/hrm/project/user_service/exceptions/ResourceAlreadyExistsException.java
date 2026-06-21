@@ -1,4 +1,4 @@
-package com.hrm.project.user_service;
+package com.hrm.project.user_service.exceptions;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

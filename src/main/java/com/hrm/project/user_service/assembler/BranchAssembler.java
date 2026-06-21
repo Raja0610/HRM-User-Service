@@ -1,6 +1,6 @@
 package com.hrm.project.user_service.assembler;
 
-import com.hrm.project.user_service.JsonUtils;
+import com.hrm.project.user_service.utils.JsonUtils;
 import com.hrm.project.user_service.dto.AddressDto;
 import com.hrm.project.user_service.dto.BranchDto;
 import com.hrm.project.user_service.entity.Address;
