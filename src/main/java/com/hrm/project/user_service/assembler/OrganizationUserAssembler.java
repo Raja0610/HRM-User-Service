@@ -31,11 +31,11 @@ public class OrganizationUserAssembler implements BaseAssembler<OrganizationUser
                 organizationUser.getUser().getEmail(),
                 organizationUser.getOrganization().getId(),
                 organizationUser.getOrganization().getName(),
-                organizationUser.getUser().getBranch() != null
-                        ? organizationUser.getUser().getBranch().getId()
+                organizationUser.getBranch() != null
+                        ? organizationUser.getBranch().getId()
                         : null,
-                organizationUser.getUser().getDepartment() != null
-                        ? organizationUser.getUser().getDepartment().getId()
+                organizationUser.getDepartment() != null
+                        ? organizationUser.getDepartment().getId()
                         : null
         );
 

@@ -73,8 +73,6 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
         user.setLastName(userDto.lastName());
         user.setEmail(userDto.email());
         user.setMobileNumber(userDto.mobileNumber());
-        user.setOrganization(organization);
-
         User savedUser = userRepository.save(user);
 
         OrganizationUserId organizationUserId = new OrganizationUserId();

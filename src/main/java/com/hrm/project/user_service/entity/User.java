@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -64,28 +66,6 @@ public class User {
     @Column(nullable = false, length = 255)
     private String email;
 
-    /**
-     * Default organization associated with the user.
-     * <p>
-     * This field may become redundant if the application
-     * fully adopts the OrganizationUser mapping model
-     * for multi-organization support.
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organization_id")
-    private Organization organization;
-
-    /**
-     * Branch to which the user currently belongs.
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "branch_id")
-    private Branch branch;
-
-    /**
-     * Department to which the user currently belongs.
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id")
-    private Department department;
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<OrganizationUser> organizationUsers = new HashSet<>();
 }
