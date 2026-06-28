@@ -60,4 +60,18 @@ public class OrganizationUser {
      */
     @Column(nullable = false)
     private Boolean active = true;
+
+    /**
+     * Branch to which the user currently belongs.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
+
+    /**
+     * Department to which the user currently belongs.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_id")
+    private Department department;
 }
