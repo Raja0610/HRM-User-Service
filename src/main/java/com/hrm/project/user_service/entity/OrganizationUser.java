@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Junction entity representing the association between an Organization and a User.
  *
@@ -74,4 +77,20 @@ public class OrganizationUser {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
+
+    /**
+     * Access roles assigned to this user within this organization.
+     * The composite organization-user key is stored in the join table so an
+     * assignment is always specific to an organization membership.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "organization_user_roles",
+            joinColumns = {
+                    @JoinColumn(name = "organization_id", referencedColumnName = "organization_id"),
+                    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+            },
+            inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id")
+    )
+    private Set<Role> roles = new HashSet<>();
 }

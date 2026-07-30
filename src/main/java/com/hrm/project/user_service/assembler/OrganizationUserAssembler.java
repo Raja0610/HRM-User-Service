@@ -36,7 +36,10 @@ public class OrganizationUserAssembler implements BaseAssembler<OrganizationUser
                         : null,
                 organizationUser.getDepartment() != null
                         ? organizationUser.getDepartment().getId()
-                        : null
+                        : null,
+                organizationUser.getRoles().stream()
+                        .map(role -> role.getId())
+                        .collect(java.util.stream.Collectors.toSet())
         );
 
         // Build and return the OrganizationUserDto.
