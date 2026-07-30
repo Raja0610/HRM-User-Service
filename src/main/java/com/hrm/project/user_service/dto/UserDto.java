@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -44,7 +45,16 @@ public record UserDto(
 
         UUID branchId,
 
-        UUID departmentId
+        UUID departmentId,
+
+        Set<UUID> roleIds
 
 ) {
+
+    /** Retains compatibility for callers that do not assign roles. */
+    public UserDto(UUID id, String firstName, String lastName, String mobileNumber, String email,
+                   UUID organizationId, String organizationName, UUID branchId, UUID departmentId) {
+        this(id, firstName, lastName, mobileNumber, email, organizationId, organizationName,
+                branchId, departmentId, Set.of());
+    }
 }

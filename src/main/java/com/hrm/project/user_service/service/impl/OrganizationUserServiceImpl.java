@@ -7,12 +7,14 @@ import com.hrm.project.user_service.dto.UserDto;
 import com.hrm.project.user_service.entity.Organization;
 import com.hrm.project.user_service.entity.OrganizationUser;
 import com.hrm.project.user_service.entity.OrganizationUserId;
+import com.hrm.project.user_service.entity.Role;
 import com.hrm.project.user_service.entity.User;
 import com.hrm.project.user_service.exceptions.DependentResourceDeleteException;
 import com.hrm.project.user_service.exceptions.ResourceAlreadyExistsException;
 import com.hrm.project.user_service.exceptions.ResourceNotFoundException;
 import com.hrm.project.user_service.repository.OrganizationRepository;
 import com.hrm.project.user_service.repository.OrganizationUserRepository;
+import com.hrm.project.user_service.repository.RoleRepository;
 import com.hrm.project.user_service.repository.UserRepository;
 import com.hrm.project.user_service.service.OrganizationUserService;
 import com.hrm.project.user_service.specification.OrganizationUserSpecification;
@@ -40,6 +42,7 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final OrganizationUserRepository organizationUserRepository;
+    private final RoleRepository roleRepository;
     private final OrganizationUserAssembler organizationUserAssembler;
 
     /**
@@ -84,6 +87,8 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
         organizationUser.setOrganization(organization);
         organizationUser.setUser(savedUser);
 
+        assignRoles(organizationId, organizationUser, userDto.roleIds());
+
         organizationUserRepository.save(organizationUser);
 
         log.info("User '{}' successfully assigned to organization '{}'.", savedUser.getId(), organizationId);
@@ -114,6 +119,11 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
         user.setMobileNumber(userDto.mobileNumber());
 
         userRepository.save(user);
+
+        if (userDto.roleIds() != null) {
+            organizationUser.getRoles().clear();
+            assignRoles(organizationId, organizationUser, userDto.roleIds());
+        }
 
         log.info("User '{}' updated successfully in organization '{}'.", userId, organizationId);
 
@@ -186,10 +196,26 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
 
         try {
             organizationUserRepository.delete(organizationUser);
+            organizationUserRepository.flush();
             log.info("User '{}' removed successfully from organization '{}'.", userId, organizationId);
         } catch (Exception e) {
             log.error("Failed to remove user '{}' from organization '{}'.", userId, organizationId, e);
             throw new DependentResourceDeleteException("Entity referenced somewhere");
         }
+    }
+
+
+
+    private void assignRoles(UUID organizationId, OrganizationUser organizationUser, Set<UUID> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return;
+        }
+
+        List<Role> roles = roleRepository.findAllById(roleIds);
+        if (roles.size() != roleIds.size() || roles.stream()
+                .anyMatch(role -> !role.getOrganization().getId().equals(organizationId))) {
+            throw new ResourceNotFoundException("Role", "organizationId", organizationId);
+        }
+        organizationUser.getRoles().addAll(roles);
     }
 }
