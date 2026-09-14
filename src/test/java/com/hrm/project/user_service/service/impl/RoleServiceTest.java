@@ -6,6 +6,7 @@ import com.hrm.project.user_service.entity.Authority;
 import com.hrm.project.user_service.entity.Organization;
 import com.hrm.project.user_service.entity.OrganizationUser;
 import com.hrm.project.user_service.entity.Role;
+import com.hrm.project.user_service.exceptions.BusinessLogicException;
 import com.hrm.project.user_service.exceptions.DependentResourceDeleteException;
 import com.hrm.project.user_service.exceptions.ResourceAlreadyExistsException;
 import com.hrm.project.user_service.exceptions.ResourceNotFoundException;
@@ -920,11 +921,9 @@ class RoleServiceTest {
         UUID organizationId = UUID.randomUUID();
         UUID roleId = UUID.randomUUID();
 
-        UUID missingAuthorityId =
-                UUID.randomUUID();
+        UUID missingAuthorityId = UUID.randomUUID();
 
-        Role role =
-                role(roleId, organizationId);
+        Role role = role(roleId, organizationId);
 
         when(roleRepository.findByIdAndOrganizationId(
                 roleId,
@@ -934,8 +933,8 @@ class RoleServiceTest {
         when(authorityRepository.findAllById(any()))
                 .thenReturn(List.of());
 
-        assertThrows(
-                ResourceNotFoundException.class,
+        BusinessLogicException exception = assertThrows(
+                BusinessLogicException.class,
                 () -> roleService.updateRoleAuthorities(
                         organizationId,
                         roleId,
@@ -943,11 +942,19 @@ class RoleServiceTest {
                 )
         );
 
-        assertTrue(
-                role.getAuthorities().isEmpty()
+        assertEquals(
+                "Some requested authorities were not found",
+                exception.getMessage()
         );
-    }
 
+        assertTrue(role.getAuthorities().isEmpty());
+
+        verify(authorityRepository)
+                .findAllById(any());
+
+        verify(roleAssembler, never())
+                .toDto(any());
+    }
 
     @Test
     void shouldRejectWhenOneOfMultipleAuthoritiesDoesNotExist() {
@@ -955,14 +962,10 @@ class RoleServiceTest {
         UUID organizationId = UUID.randomUUID();
         UUID roleId = UUID.randomUUID();
 
-        UUID existingAuthorityId =
-                UUID.randomUUID();
+        UUID existingAuthorityId = UUID.randomUUID();
+        UUID missingAuthorityId = UUID.randomUUID();
 
-        UUID missingAuthorityId =
-                UUID.randomUUID();
-
-        Role role =
-                role(roleId, organizationId);
+        Role role = role(roleId, organizationId);
 
         Authority existingAuthority =
                 authority(existingAuthorityId);
@@ -975,31 +978,31 @@ class RoleServiceTest {
         when(authorityRepository.findAllById(any()))
                 .thenReturn(List.of(existingAuthority));
 
-        ResourceNotFoundException exception =
-                assertThrows(
-                        ResourceNotFoundException.class,
-                        () -> roleService.updateRoleAuthorities(
-                                organizationId,
-                                roleId,
-                                List.of(
-                                        existingAuthorityId,
-                                        missingAuthorityId
-                                )
+        BusinessLogicException exception = assertThrows(
+                BusinessLogicException.class,
+                () -> roleService.updateRoleAuthorities(
+                        organizationId,
+                        roleId,
+                        List.of(
+                                existingAuthorityId,
+                                missingAuthorityId
                         )
-                );
+                )
+        );
 
-        assertNotNull(exception.getMessage());
-
-        assertTrue(
+        assertEquals(
+                "Some requested authorities were not found",
                 exception.getMessage()
-                        .contains(
-                                missingAuthorityId.toString()
-                        )
         );
 
-        assertTrue(
-                role.getAuthorities().isEmpty()
-        );
+        // Authorities must not be partially updated
+        assertTrue(role.getAuthorities().isEmpty());
+
+        verify(authorityRepository)
+                .findAllById(any());
+
+        verify(roleAssembler, never())
+                .toDto(any());
     }
 
 
