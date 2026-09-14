@@ -20,7 +20,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class OrganizationDto {
 
     private UUID id;
@@ -37,7 +37,6 @@ public class OrganizationDto {
 
     private Long totalWorkForce;
 
-    @NotBlank(message = "Website must not be blank")
     @Size(max = 500, message = "Website must not exceed 500 characters")
     @Pattern(
             regexp = "^(https?://).+$",

@@ -12,7 +12,11 @@ import com.hrm.project.user_service.exceptions.ResourceNotFoundException;
 import com.hrm.project.user_service.repository.OrganizationRepository;
 import com.hrm.project.user_service.service.OrganizationService;
 import com.hrm.project.user_service.specification.OrganizationSpecification;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -23,16 +27,13 @@ import java.util.*;
  * Service implementation responsible for Organization management operations.
  */
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class OrganizationServiceImpl implements OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final ModelMapper modelMapper;
-
-    public OrganizationServiceImpl(OrganizationRepository organizationRepository,
-                                   ModelMapper modelMapper) {
-        this.organizationRepository = organizationRepository;
-        this.modelMapper = modelMapper;
-    }
+    private final ResourceBundleMessageSource messageSource;
 
     /**
      * Creates a new organization after validating name uniqueness.
@@ -44,7 +45,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     public OrganizationDto createOrganization(OrganizationDto organizationDto) {
 
         if (organizationRepository.existsByNameIgnoreCase(organizationDto.getName())) {
-            throw new ResourceAlreadyExistsException("Organization already exists with name : " + organizationDto.getName()
+            throw new ResourceAlreadyExistsException("Organization", "name", organizationDto.getName()
             );
         }
 
@@ -66,19 +67,23 @@ public class OrganizationServiceImpl implements OrganizationService {
     /**
      * Retrieves organizations using optional filters and pagination.
      *
-     * @param id         organization id
-     * @param name       organization name
-     * @param pageNumber page number
-     * @param pageSize   page size
-     * @param sortBy     field used for sorting
+     * @param id          organization id
+     * @param name        organization name
+     * @param displayName organization display name
+     * @param pageNumber  page number
+     * @param pageSize    page size
+     * @param sortBy      field used for sorting
+     * @param sortOrder   field used for specify sorting order
      * @return response containing pager and items
      */
     @Override
     public Map<String, Object> getAllOrganizations(UUID id,
                                                    String name,
+                                                   String displayName,
                                                    int pageNumber,
                                                    Integer pageSize,
-                                                   String sortBy) {
+                                                   String sortBy,
+                                                   String sortOrder) {
 
         Specification<Organization> specification = Specification.unrestricted();
 
@@ -86,13 +91,19 @@ public class OrganizationServiceImpl implements OrganizationService {
             specification = specification.and(OrganizationSpecification.hasId(id));
         }
 
-        if (Objects.nonNull(name)) {
+        if (Objects.nonNull(displayName) && !displayName.isBlank()) {
+            specification = specification.and(OrganizationSpecification.hasDisplayName(displayName));
+        }
+
+        if (Objects.nonNull(name) && !name.isBlank()) {
             specification = specification.and(OrganizationSpecification.hasName(name));
         }
 
         Pageable pageable = (pageSize == null || pageSize <= 0)
                 ? Pageable.unpaged()
-                : PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.ASC, sortBy));
+                : PageRequest.of(pageNumber,
+                pageSize,
+                Sort.by(Sort.Direction.fromString(sortOrder), sortBy));
 
         Page<Organization> page = organizationRepository.findAll(specification, pageable);
 
@@ -126,7 +137,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         );
 
         if (organizationUpdateDto.name() != null && organizationRepository.existsByNameIgnoreCaseAndIdNot(organizationUpdateDto.name(), id)) {
-            throw new ResourceAlreadyExistsException("Organization already exists with name : " + organizationUpdateDto.name());
+            throw new ResourceAlreadyExistsException("Organization", "name", organizationUpdateDto.name());
         }
 
         organization.setName(organizationUpdateDto.name());
@@ -156,7 +167,13 @@ public class OrganizationServiceImpl implements OrganizationService {
         try {
             organizationRepository.delete(organization);
         } catch (Exception e) {
-            throw new DependentResourceDeleteException("Entity is already referenced");
+            log.error("Unable to delete organization '{}' because it is referenced by another resource.", id, e);
+
+            // Keep the domain exception available when localization is not configured in an isolated unit test.
+            String message = messageSource == null
+                    ? "Organization could not be deleted because it is referenced."
+                    : messageSource.getMessage("entity.referenced", null, LocaleContextHolder.getLocale());
+            throw new DependentResourceDeleteException(message);
         }
     }
 }
