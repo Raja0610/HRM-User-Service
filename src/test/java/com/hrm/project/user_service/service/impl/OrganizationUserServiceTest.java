@@ -13,6 +13,7 @@ import com.hrm.project.user_service.exceptions.ResourceNotFoundException;
 import com.hrm.project.user_service.repository.OrganizationRepository;
 import com.hrm.project.user_service.repository.OrganizationUserRepository;
 import com.hrm.project.user_service.repository.UserRepository;
+import com.hrm.project.user_service.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,12 @@ class OrganizationUserServiceTest {
 
     @Mock
     private OrganizationUserAssembler organizationUserAssembler;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private ResourceBundleMessageSource messageSource;
 
     @InjectMocks
     private OrganizationUserServiceImpl organizationUserService;
@@ -73,7 +81,7 @@ class OrganizationUserServiceTest {
                 () -> organizationUserService.assignUserToOrganization(organizationId, userDto)
         );
 
-        verify(userRepository, never()).save(any());
+        verify(userService, never()).createUser(any());
     }
 
     @Test
@@ -104,11 +112,7 @@ class OrganizationUserServiceTest {
         when(organizationRepository.findById(organizationId))
                 .thenReturn(Optional.of(organization));
 
-        when(userRepository.findByEmail(userDto.email()))
-                .thenReturn(Optional.empty());
-
-        when(userRepository.save(any(User.class)))
-                .thenReturn(savedUser);
+        when(userService.createUser(userDto)).thenReturn(savedUser);
 
         when(organizationUserAssembler.toDto(any(OrganizationUser.class)))
                 .thenReturn(responseDto);
@@ -118,7 +122,7 @@ class OrganizationUserServiceTest {
 
         assertNotNull(result);
 
-        verify(userRepository).save(any(User.class));
+        verify(userService).createUser(userDto);
         verify(organizationUserRepository).save(any(OrganizationUser.class));
     }
 
@@ -129,6 +133,7 @@ class OrganizationUserServiceTest {
         UUID userId = UUID.randomUUID();
 
         Organization organization = new Organization();
+        organization.setId(organizationId);
 
         User existingUser = new User();
         existingUser.setId(userId);
@@ -145,21 +150,41 @@ class OrganizationUserServiceTest {
                 null
         );
 
+        OrganizationUserId organizationUserId = new OrganizationUserId();
+        organizationUserId.setOrganizationId(organizationId);
+        organizationUserId.setUserId(userId);
+
         when(organizationRepository.findById(organizationId))
                 .thenReturn(Optional.of(organization));
 
-        when(userRepository.findByEmail(userDto.email()))
-                .thenReturn(Optional.of(existingUser));
+        when(userService.createUser(userDto))
+                .thenReturn(existingUser);
 
-        when(organizationUserRepository.existsById(any(OrganizationUserId.class)))
+        when(organizationUserRepository.existsById(organizationUserId))
                 .thenReturn(true);
 
         assertThrows(
                 ResourceAlreadyExistsException.class,
-                () -> organizationUserService.assignUserToOrganization(organizationId, userDto)
+                () -> organizationUserService.assignUserToOrganization(
+                        organizationId,
+                        userDto
+                )
         );
 
-        verify(organizationUserRepository, never()).save(any());
+        verify(organizationRepository)
+                .findById(organizationId);
+
+        verify(userService)
+                .createUser(userDto);
+
+        verify(organizationUserRepository)
+                .existsById(organizationUserId);
+
+        verify(organizationUserRepository, never())
+                .save(any());
+
+        verify(organizationUserAssembler, never())
+                .toDto(any());
     }
 
     @Test
@@ -230,7 +255,7 @@ class OrganizationUserServiceTest {
 
         assertNotNull(result);
 
-        verify(userRepository).save(user);
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test

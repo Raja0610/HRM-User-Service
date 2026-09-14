@@ -62,7 +62,7 @@ public class OrganizationUser {
      * without removing the association record.</p>
      */
     @Column(nullable = false)
-    private Boolean active = true;
+    private Boolean active = false;
 
     /**
      * Branch to which the user currently belongs.

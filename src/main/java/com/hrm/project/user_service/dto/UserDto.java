@@ -10,15 +10,15 @@ import java.util.UUID;
 /**
  * Data Transfer Object representing user information.
  *
- * @param id Unique identifier of the user.
- * @param firstName User's first name.
- * @param lastName User's last name.
- * @param mobileNumber User's mobile number. Must be a valid 10-digit Indian mobile number.
- * @param email User's email address.
- * @param organizationId Identifier of the organization to which the user belongs.
+ * @param id               Unique identifier of the user.
+ * @param firstName        User's first name.
+ * @param lastName         User's last name.
+ * @param mobileNumber     User's mobile number. Must be a valid 10-digit Indian mobile number.
+ * @param email            User's email address.
+ * @param organizationId   Identifier of the organization to which the user belongs.
  * @param organizationName Name of the organization associated with the user.
- * @param branchId Identifier of the user's branch.
- * @param departmentId Identifier of the user's department.
+ * @param branchId         Identifier of the user's branch.
+ * @param departmentId     Identifier of the user's department.
  */
 public record UserDto(
 
@@ -51,7 +51,9 @@ public record UserDto(
 
 ) {
 
-    /** Retains compatibility for callers that do not assign roles. */
+    /**
+     * Retains compatibility for callers that do not assign roles.
+     */
     public UserDto(UUID id, String firstName, String lastName, String mobileNumber, String email,
                    UUID organizationId, String organizationName, UUID branchId, UUID departmentId) {
         this(id, firstName, lastName, mobileNumber, email, organizationId, organizationName,

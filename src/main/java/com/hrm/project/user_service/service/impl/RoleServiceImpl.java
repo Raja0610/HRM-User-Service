@@ -6,6 +6,7 @@ import com.hrm.project.user_service.dto.RoleDto;
 import com.hrm.project.user_service.entity.Authority;
 import com.hrm.project.user_service.entity.Organization;
 import com.hrm.project.user_service.entity.Role;
+import com.hrm.project.user_service.exceptions.BusinessLogicException;
 import com.hrm.project.user_service.exceptions.DependentResourceDeleteException;
 import com.hrm.project.user_service.exceptions.ResourceAlreadyExistsException;
 import com.hrm.project.user_service.exceptions.ResourceNotFoundException;
@@ -23,13 +24,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -94,17 +89,11 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleDto updateRoleAuthorities(UUID organizationId, UUID roleId, List<UUID> authorityIds) {
         Role role = findRole(organizationId, roleId);
-        LinkedHashSet<UUID> requestedAuthorityIds = new LinkedHashSet<>(authorityIds);
+        Set<UUID> requestedAuthorityIds = new LinkedHashSet<>(authorityIds);
         List<Authority> authorities = authorityRepository.findAllById(requestedAuthorityIds);
 
         if (authorities.size() != requestedAuthorityIds.size()) {
-            HashSet<UUID> foundAuthorityIds = new HashSet<>();
-            authorities.forEach(authority -> foundAuthorityIds.add(authority.getId()));
-            UUID missingAuthorityId = requestedAuthorityIds.stream()
-                    .filter(authorityId -> !foundAuthorityIds.contains(authorityId))
-                    .findFirst()
-                    .orElseThrow();
-            throw new ResourceNotFoundException("Authority", "id", missingAuthorityId);
+            throw new BusinessLogicException("Some requested authorities were not found");
         }
 
         role.getAuthorities().clear();
