@@ -1,7 +1,7 @@
 package com.hrm.project.user_service.entity;
 
-import com.hrm.project.user_service.enums.AuthorityType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,17 +16,20 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Authority {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true, length = 100)
-    private AuthorityType name;
+    private String name;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
+    private String moduleName;
+
+    @Column(length = 255)
     private String description;
 
     /** Roles that grant this authority. */

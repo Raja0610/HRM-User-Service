@@ -10,38 +10,40 @@ import lombok.Getter;
 
 @Getter
 public enum AuthorityType {
-    ORGANIZATION_CREATE("Create organizations"),
-    ORGANIZATION_READ("View organizations"),
-    ORGANIZATION_UPDATE("Update organizations"),
-    ORGANIZATION_DELETE("Delete organizations"),
+    ORGANIZATION_CREATE("Create organizations", "organization"),
+    ORGANIZATION_READ("View organizations", "organization"),
+    ORGANIZATION_UPDATE("Update organizations", "organization"),
+    ORGANIZATION_DELETE("Delete organizations", "organization"),
 
-    BRANCH_CREATE("Create branches"),
-    BRANCH_READ("View branches"),
-    BRANCH_UPDATE("Update branches"),
-    BRANCH_DELETE("Delete branches"),
+    BRANCH_CREATE("Create branches", "branch"),
+    BRANCH_READ("View branches", "branch"),
+    BRANCH_UPDATE("Update branches", "branch"),
+    BRANCH_DELETE("Delete branches", "branch"),
 
-    DEPARTMENT_CREATE("Create departments"),
-    DEPARTMENT_READ("View departments"),
-    DEPARTMENT_UPDATE("Update departments"),
-    DEPARTMENT_DELETE("Delete departments"),
+    DEPARTMENT_CREATE("Create departments", "department"),
+    DEPARTMENT_READ("View departments", "department"),
+    DEPARTMENT_UPDATE("Update departments", "department"),
+    DEPARTMENT_DELETE("Delete departments", "departmnet"),
 
-    USER_CREATE("Create organization users"),
-    USER_READ("View organization users"),
-    USER_UPDATE("Update organization users"),
-    USER_DELETE("Delete organization users"),
+    USER_CREATE("Create organization users", "user"),
+    USER_READ("View organization users", "user"),
+    USER_UPDATE("Update organization users", "user"),
+    USER_DELETE("Delete organization users", "user"),
 
-    ROLE_CREATE("Create roles"),
-    ROLE_READ("View roles"),
-    ROLE_UPDATE("Update roles"),
-    ROLE_DELETE("Delete roles"),
+    ROLE_CREATE("Create roles", "role"),
+    ROLE_READ("View roles", "role"),
+    ROLE_UPDATE("Update roles", "role"),
+    ROLE_DELETE("Delete roles", "role"),
 
-    AUTHORITY_READ("View authorities"),
-    AUTHORITY_DELETE("Delete authorities");
+    AUTHORITY_READ("View authorities", "authority"),
+    AUTHORITY_DELETE("Delete authorities", "authority");
 
     private final String type;
+    private final String module;
 
-    private AuthorityType(String type) {
+    private AuthorityType(String type, String module) {
         this.type = type;
+        this.module = module;
     }
 
     @JsonCreator
