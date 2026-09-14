@@ -10,5 +10,5 @@ import java.util.UUID;
 @Repository
 public interface AuthorityRepository extends JpaRepository<Authority, UUID> {
 
-    boolean existsByName(AuthorityType name);
+    boolean existsByName(String name);
 }

@@ -2,6 +2,8 @@ package com.hrm.project.user_service.controller;
 
 import com.hrm.project.user_service.dto.AuthorityDto;
 import com.hrm.project.user_service.service.AuthorityService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,13 +14,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/authorities")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class AuthorityController {
 
     private final AuthorityService authorityService;
-
-    public AuthorityController(AuthorityService authorityService) {
-        this.authorityService = authorityService;
-    }
 
     @GetMapping
     public ResponseEntity<List<AuthorityDto>> getAuthorities() {
@@ -26,8 +25,8 @@ public class AuthorityController {
     }
 
     @DeleteMapping("/{authorityId}")
-    public ResponseEntity<Void> deleteAuthority(@PathVariable UUID authorityId) {
+    public ResponseEntity<String> deleteAuthority(@PathVariable UUID authorityId) {
         authorityService.deleteAuthority(authorityId);
-        return ResponseEntity.noContent().build();
+        return new ResponseEntity<>("This authority is deleted", HttpStatus.OK );
     }
 }

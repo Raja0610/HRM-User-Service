@@ -13,7 +13,10 @@ public class AuthorityAssembler implements BaseAssembler<Authority, AuthorityDto
         if (authority == null) {
             return null;
         }
-        return new AuthorityDto(authority.getId(), authority.getName(), authority.getDescription());
+        return new AuthorityDto(authority.getId(),
+                authority.getName(),
+                authority.getModuleName(),
+                authority.getDescription());
     }
 
     @Override
