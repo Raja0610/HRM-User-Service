@@ -18,7 +18,7 @@ import java.util.UUID;
  * and removing organization users.
  */
 @Slf4j
-@CrossOrigin
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/api/v1/organizations/{organizationId}/users")
 @RequiredArgsConstructor
@@ -30,7 +30,7 @@ public class OrganizationUserController {
      * Assigns a user to the specified organization.
      *
      * @param organizationId the organization identifier
-     * @param userDto the user details
+     * @param userDto        the user details
      * @return the created organization-user association
      */
     @PostMapping
@@ -49,8 +49,8 @@ public class OrganizationUserController {
     /**
      * Updates an existing user within the specified organization.
      *
-     * @param organizationId the organization identifier
-     * @param userId the user identifier
+     * @param organizationId      the organization identifier
+     * @param userId              the user identifier
      * @param organizationUserDto the updated user details
      * @return the updated organization-user association
      */
@@ -76,12 +76,12 @@ public class OrganizationUserController {
      * Retrieves users belonging to the specified organization with optional filters.
      *
      * @param organizationId the organization identifier
-     * @param userName optional user name filter
-     * @param email optional email filter
-     * @param branchId optional branch identifier
-     * @param departmentId optional department identifier
-     * @param pageNumber page number
-     * @param pageSize page size
+     * @param userName       optional user name filter
+     * @param email          optional email filter
+     * @param branchId       optional branch identifier
+     * @param departmentId   optional department identifier
+     * @param pageNumber     page number
+     * @param pageSize       page size
      * @return paginated list of organization users
      */
     @GetMapping
@@ -113,7 +113,7 @@ public class OrganizationUserController {
      * Removes a user from the specified organization.
      *
      * @param organizationId the organization identifier
-     * @param userId the user identifier
+     * @param userId         the user identifier
      * @return success message
      */
     @DeleteMapping("/{userId}")

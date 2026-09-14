@@ -17,9 +17,12 @@ import com.hrm.project.user_service.repository.OrganizationUserRepository;
 import com.hrm.project.user_service.repository.RoleRepository;
 import com.hrm.project.user_service.repository.UserRepository;
 import com.hrm.project.user_service.service.OrganizationUserService;
+import com.hrm.project.user_service.service.UserService;
 import com.hrm.project.user_service.specification.OrganizationUserSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,15 +43,17 @@ import java.util.*;
 public class OrganizationUserServiceImpl implements OrganizationUserService {
 
     private final OrganizationRepository organizationRepository;
-    private final UserRepository userRepository;
     private final OrganizationUserRepository organizationUserRepository;
     private final RoleRepository roleRepository;
     private final OrganizationUserAssembler organizationUserAssembler;
+    private final UserService userService;
+    private final ResourceBundleMessageSource messageSource;
 
     /**
      * Creates a new user (if not exists) and assigns the user to an organization.
      */
     @Override
+    @Transactional
     public OrganizationUserDto assignUserToOrganization(UUID organizationId, UserDto userDto) {
 
         log.info("Assigning user with email '{}' to organization '{}'.", userDto.email(), organizationId);
@@ -56,43 +61,27 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
         Organization organization = organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Organization", "id", organizationId));
 
-        Optional<User> existingUser = userRepository.findByEmail(userDto.email());
-
-        User user = existingUser.orElse(new User());
-
-        if (existingUser.isPresent()) {
-
-            OrganizationUserId organizationUserId = new OrganizationUserId();
-            organizationUserId.setOrganizationId(organizationId);
-            organizationUserId.setUserId(user.getId());
-
-            if (organizationUserRepository.existsById(organizationUserId)) {
-                log.warn("User with email '{}' already assigned to organization '{}'.", userDto.email(), organizationId);
-                throw new ResourceAlreadyExistsException("User already assigned to this organization");
-            }
-        }
-
-        user.setFirstName(userDto.firstName());
-        user.setLastName(userDto.lastName());
-        user.setEmail(userDto.email());
-        user.setMobileNumber(userDto.mobileNumber());
-        User savedUser = userRepository.save(user);
+        User user = userService.createUser(userDto);
 
         OrganizationUserId organizationUserId = new OrganizationUserId();
         organizationUserId.setOrganizationId(organizationId);
-        organizationUserId.setUserId(savedUser.getId());
+        organizationUserId.setUserId(user.getId());
+
+        if (organizationUserRepository.existsById(organizationUserId)) {
+            log.warn("User with email '{}' already assigned to organization '{}'.", userDto.email(), organizationId);
+            throw new ResourceAlreadyExistsException("User", "organization-user-id", organization.getId().toString().concat(" ").concat(user.getId().toString()));
+        }
 
         OrganizationUser organizationUser = new OrganizationUser();
         organizationUser.setId(organizationUserId);
         organizationUser.setOrganization(organization);
-        organizationUser.setUser(savedUser);
+        organizationUser.setUser(user);
 
         assignRoles(organizationId, organizationUser, userDto.roleIds());
 
         organizationUserRepository.save(organizationUser);
 
-        log.info("User '{}' successfully assigned to organization '{}'.", savedUser.getId(), organizationId);
-
+        log.info("User '{}' successfully assigned to organization '{}'.", user.getId(), organizationId);
         return organizationUserAssembler.toDto(organizationUser);
     }
 
@@ -110,15 +99,6 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
         OrganizationUser organizationUser = organizationUserRepository
                 .findByOrganizationIdAndUserId(organizationId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("OrganizationUser", "id", userId));
-
-        User user = organizationUser.getUser();
-
-        user.setFirstName(userDto.firstName());
-        user.setLastName(userDto.lastName());
-        user.setEmail(userDto.email());
-        user.setMobileNumber(userDto.mobileNumber());
-
-        userRepository.save(user);
 
         if (userDto.roleIds() != null) {
             organizationUser.getRoles().clear();
@@ -192,7 +172,7 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
         id.setUserId(userId);
 
         OrganizationUser organizationUser = organizationUserRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Organization user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("OrganizationUser", "id", id.getOrganizationId()+" "+id.getUserId()));
 
         try {
             organizationUserRepository.delete(organizationUser);
@@ -200,10 +180,9 @@ public class OrganizationUserServiceImpl implements OrganizationUserService {
             log.info("User '{}' removed successfully from organization '{}'.", userId, organizationId);
         } catch (Exception e) {
             log.error("Failed to remove user '{}' from organization '{}'.", userId, organizationId, e);
-            throw new DependentResourceDeleteException("Entity referenced somewhere");
+            throw new DependentResourceDeleteException(messageSource.getMessage("entity.referenced", null, LocaleContextHolder.getLocale()));
         }
     }
-
 
 
     private void assignRoles(UUID organizationId, OrganizationUser organizationUser, Set<UUID> roleIds) {

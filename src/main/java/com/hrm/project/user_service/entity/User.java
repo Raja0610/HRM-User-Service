@@ -1,10 +1,7 @@
 package com.hrm.project.user_service.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -32,6 +29,7 @@ public class User {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column
     private UUID id;
 
     /**
@@ -63,7 +61,7 @@ public class User {
      * <p>
      * Expected to be unique across the system.
      */
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
