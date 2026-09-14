@@ -18,9 +18,7 @@ public final class OrganizationSpecification {
      */
     public static Specification<Organization> hasId(UUID id) {
         return (root, query, criteriaBuilder) ->
-                id == null
-                        ? criteriaBuilder.conjunction()
-                        : criteriaBuilder.equal(root.get("id"), id);
+                criteriaBuilder.equal(root.get("id"), id);
     }
 
     /**
@@ -31,11 +29,18 @@ public final class OrganizationSpecification {
      */
     public static Specification<Organization> hasName(String name) {
         return (root, query, criteriaBuilder) ->
-                name == null || name.isBlank()
-                        ? criteriaBuilder.conjunction()
-                        : criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("name")),
-                        "%" + name.toLowerCase() + "%"
+                criteriaBuilder.like(root.get("name"), "%" + name + "%"
                 );
+    }
+
+    /**
+     * Filters organizations by name.
+     *
+     * @param displayName organization name
+     * @return specification for name filter
+     */
+    public static Specification<Organization> hasDisplayName(String displayName) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.like(root.get("displayName"), "%"+ displayName + "%");
     }
 }

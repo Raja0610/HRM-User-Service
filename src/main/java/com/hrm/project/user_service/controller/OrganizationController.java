@@ -4,10 +4,12 @@ import com.hrm.project.user_service.dto.OrganizationDto;
 import com.hrm.project.user_service.dto.OrganizationUpdateDto;
 import com.hrm.project.user_service.service.OrganizationService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -23,19 +25,11 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("api/v1/organizations")
+@RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class OrganizationController {
 
     private final OrganizationService organizationService;
-
-    /**
-     * Constructor-based dependency injection.
-     *
-     * @param organizationService service responsible for organization operations
-     */
-    public OrganizationController(OrganizationService organizationService) {
-        this.organizationService = organizationService;
-    }
 
     /**
      * Creates a new organization.
@@ -63,25 +57,33 @@ public class OrganizationController {
      *     <li>Sorting support</li>
      * </ul>
      *
-     * @param id         optional organization identifier
-     * @param shortName  optional organization short name
-     * @param pageNumber page number for pagination
-     * @param pageSize   number of records per page
-     * @param sortBy     field used for sorting
+     * @param id          optional organization identifier
+     * @param displayName optional organization display name
+     * @param name        optional organization name
+     * @param pageNumber  page number for pagination
+     * @param pageSize    number of records per page
+     * @param sortBy      field used for sorting
+     * @param sortOrder   field used for specify sorting order
      * @return filtered organization data
      */
     @GetMapping
-    public ResponseEntity<?> getOrganizations(@RequestParam(required = false) UUID id,
-                                              @RequestParam(required = false) String shortName,
-                                              @RequestParam(defaultValue = "0") int pageNumber,
-                                              @RequestParam(required = false) Integer pageSize,
-                                              @RequestParam(defaultValue = "asc") String sortBy) {
+    public ResponseEntity<Object> getOrganizations(@RequestParam(required = false) UUID id,
+                                                   @RequestParam(required = false) String name,
+                                                   @RequestParam(required = false) String displayName,
+                                                   @RequestParam(defaultValue = "0") int pageNumber,
+                                                   @RequestParam(required = false) Integer pageSize,
+                                                   @RequestParam(required = false, defaultValue = "displayName") String sortBy,
+                                                   @RequestParam(defaultValue = "asc") String sortOrder) {
+        Set<String> sortFactors = Set.of("displayName", "establishedYear", "name");
+        sortBy = sortFactors.contains(sortBy) ? sortBy : "displayName";
 
         return ResponseEntity.ok(organizationService.getAllOrganizations(id,
-                shortName,
+                name,
+                displayName,
                 pageNumber,
                 pageSize,
-                sortBy));
+                sortBy,
+                sortOrder));
     }
 
     /**

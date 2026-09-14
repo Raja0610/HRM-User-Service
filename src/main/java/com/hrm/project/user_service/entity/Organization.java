@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,14 +33,15 @@ public class Organization {
 
     /**
      * Official name of the organization.
+     * Used for maintaining unique organization within system
      */
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     /**
-     * Unique display name used to distinguish the organization in the system.
+     * Unique display name to describe organization identity.
      */
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String displayName;
 
     /**
@@ -52,7 +55,7 @@ public class Organization {
      * <p>
      * Defaults to 0 when not explicitly provided.
      */
-    @Column
+    @Column(name = "current_workforce")
     private Long totalWorkForce = 0L;
 
     /**
@@ -72,4 +75,13 @@ public class Organization {
      */
     @Column
     private LocalDate establishedYear;
+
+    @OneToMany(mappedBy = "organization", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Branch> branches = new ArrayList<>();
+
+    @OneToMany(mappedBy = "organization", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrganizationUser> organizationUsers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "organization", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Role> roles = new ArrayList<>();
 }

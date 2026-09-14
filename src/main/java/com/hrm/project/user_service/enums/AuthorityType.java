@@ -1,9 +1,14 @@
 package com.hrm.project.user_service.enums;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import lombok.Getter;
+
 /**
  * System authorities available for assignment to roles.
  * These values are seeded into the database when the application starts.
  */
+
+@Getter
 public enum AuthorityType {
     ORGANIZATION_CREATE("Create organizations"),
     ORGANIZATION_READ("View organizations"),
@@ -33,13 +38,19 @@ public enum AuthorityType {
     AUTHORITY_READ("View authorities"),
     AUTHORITY_DELETE("Delete authorities");
 
-    private final String description;
+    private final String type;
 
-    AuthorityType(String description) {
-        this.description = description;
+    private AuthorityType(String type) {
+        this.type = type;
     }
 
-    public String getDescription() {
-        return description;
+    @JsonCreator
+    public static AuthorityType getTypeFromAuthorityType(String type){
+        for(AuthorityType authorityType : AuthorityType.values()){
+            if(authorityType.getType().equalsIgnoreCase(type)){
+                return authorityType;
+            }
+        }
+        return null;
     }
 }

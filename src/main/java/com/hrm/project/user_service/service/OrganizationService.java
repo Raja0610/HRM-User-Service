@@ -39,18 +39,22 @@ public interface OrganizationService {
      *     <li>Sorting</li>
      * </ul>
      *
-     * @param id         optional organization identifier
-     * @param shortName  optional organization short name
-     * @param pageNumber page number for pagination
-     * @param pageSize   number of records per page
-     * @param sortBy     field used for sorting results
+     * @param id          optional organization identifier
+     * @param name        optional organization unique name
+     * @param displayName optional organization displayable name
+     * @param pageNumber  page number for pagination
+     * @param pageSize    number of records per page
+     * @param sortBy      field used for sorting results
+     * @param sortOrder   field used for specify sorting order
      * @return response containing organization data and pagination metadata
      */
     Map<String, Object> getAllOrganizations(UUID id,
-                                            String shortName,
+                                            String name,
+                                            String displayName,
                                             int pageNumber,
                                             Integer pageSize,
-                                            String sortBy);
+                                            String sortBy,
+                                            String sortOrder);
 
     /**
      * Updates an existing organization.

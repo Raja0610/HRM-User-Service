@@ -1,5 +1,6 @@
 package com.hrm.project.user_service.service.impl;
 
+import com.hrm.project.user_service.constants.ApplicationConstantsTest;
 import com.hrm.project.user_service.exceptions.ResourceAlreadyExistsException;
 import com.hrm.project.user_service.dto.OrganizationDto;
 import com.hrm.project.user_service.dto.OrganizationUpdateDto;
@@ -45,46 +46,49 @@ class OrganizationServiceTest {
 
         UUID organizationId = UUID.randomUUID();
 
+        //Creating a mock object for insertion in db
         OrganizationDto request = OrganizationDto.builder()
-                .name("Panex")
-                .displayName("Panex Logistics")
-                .website("https://panex.com")
-                .headQuarter("Delhi")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
+                .website(ApplicationConstantsTest.mockTestDataWebsiteUrl)
+                .headQuarter(ApplicationConstantsTest.mockTestDataHeadquarter)
                 .active(true)
                 .establishedYear(LocalDate.of(2020, 1, 1))
                 .totalWorkForce(100L)
                 .build();
 
+        //Saved db response
         Organization savedOrganization = Organization.builder()
                 .id(organizationId)
-                .name("Panex")
-                .displayName("Panex Logistics")
-                .website("https://panex.com")
-                .headQuarter("Delhi")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
+                .website(ApplicationConstantsTest.mockTestDataWebsiteUrl)
+                .headQuarter(ApplicationConstantsTest.mockTestDataHeadquarter)
                 .active(true)
                 .establishedYear(LocalDate.of(2020, 1, 1))
                 .totalWorkForce(100L)
                 .build();
 
+        //Dto response from the api
         OrganizationDto response = OrganizationDto.builder()
                 .id(organizationId)
-                .name("Panex")
-                .displayName("Panex Logistics")
-                .website("https://panex.com")
-                .headQuarter("Delhi")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
+                .website(ApplicationConstantsTest.mockTestDataWebsiteUrl)
+                .headQuarter(ApplicationConstantsTest.mockTestDataHeadquarter)
                 .active(true)
                 .establishedYear(LocalDate.of(2020, 1, 1))
                 .totalWorkForce(100L)
                 .build();
 
-        when(organizationRepository.existsByNameIgnoreCase("Panex")).thenReturn(false);
+        when(organizationRepository.existsByNameIgnoreCase(ApplicationConstantsTest.mockTestDataCompanyName)).thenReturn(false);
         when(organizationRepository.save(any(Organization.class))).thenReturn(savedOrganization);
         when(modelMapper.map(savedOrganization, OrganizationDto.class)).thenReturn(response);
 
         OrganizationDto result = organizationService.createOrganization(request);
 
         assertNotNull(result);
-        assertEquals("Panex", result.getName());
+        assertEquals(ApplicationConstantsTest.mockTestDataCompanyName, result.getName());
 
         verify(organizationRepository).save(any(Organization.class));
     }
@@ -96,14 +100,14 @@ class OrganizationServiceTest {
 
         Organization organization = Organization.builder()
                 .id(organizationId)
-                .name("Panex")
-                .displayName("Panex Logistics")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
                 .build();
 
         OrganizationDto organizationDto = OrganizationDto.builder()
                 .id(organizationId)
-                .name("Panex")
-                .displayName("Panex Logistics")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
                 .build();
 
         Page<Organization> page = new PageImpl<>(List.of(organization));
@@ -113,20 +117,19 @@ class OrganizationServiceTest {
                 any(Pageable.class)
         )).thenReturn(page);
 
-        when(modelMapper.map(organization, OrganizationDto.class))
-                .thenReturn(organizationDto);
+        when(modelMapper.map(organization, OrganizationDto.class)).thenReturn(organizationDto);
 
-        Map<String, Object> response = organizationService.getAllOrganizations(
-                organizationId,
+        Map<String, Object> response = organizationService.getAllOrganizations(organizationId,
+                null,
                 null,
                 0,
                 10,
-                "name"
+                "name",
+                "asc"
         );
 
         @SuppressWarnings("unchecked")
-        List<OrganizationDto> items =
-                (List<OrganizationDto>) response.get("items");
+        List<OrganizationDto> items = (List<OrganizationDto>) response.get("items");
 
         PagerDto pager = (PagerDto) response.get("pager");
 
@@ -148,32 +151,30 @@ class OrganizationServiceTest {
 
         Organization organization = Organization.builder()
                 .id(UUID.randomUUID())
-                .name("Panex")
-                .displayName("Panex Logistics")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
                 .build();
 
         OrganizationDto organizationDto = OrganizationDto.builder()
                 .id(organization.getId())
-                .name("Panex")
-                .displayName("Panex Logistics")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
                 .build();
 
         Page<Organization> page = new PageImpl<>(List.of(organization));
 
-        when(organizationRepository.findAll(
-                ArgumentMatchers.<Specification<Organization>>any(),
-                eq(Pageable.unpaged())
-        )).thenReturn(page);
+        when(organizationRepository.findAll(ArgumentMatchers.<Specification<Organization>>any(), eq(Pageable.unpaged()))).thenReturn(page);
 
-        when(modelMapper.map(organization, OrganizationDto.class))
-                .thenReturn(organizationDto);
+        when(modelMapper.map(organization, OrganizationDto.class)).thenReturn(organizationDto);
 
         Map<String, Object> response = organizationService.getAllOrganizations(
                 null,
                 null,
+                null,
                 0,
                 null,
-                "name"
+                "name",
+                null
         );
 
         @SuppressWarnings("unchecked")
@@ -198,36 +199,38 @@ class OrganizationServiceTest {
     @Test
     void shouldReturnOrganizationsByNameFilter() {
 
-        String organizationName = "Panex";
-
+        //Entity data creation
         Organization organization = Organization.builder()
                 .id(UUID.randomUUID())
-                .name(organizationName)
-                .displayName("Panex Logistics")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
                 .build();
 
+        //Dto data creation
         OrganizationDto organizationDto = OrganizationDto.builder()
                 .id(organization.getId())
-                .name(organizationName)
-                .displayName("Panex Logistics")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
                 .build();
 
+        //Page of organization
         Page<Organization> page = new PageImpl<>(List.of(organization));
 
-        when(organizationRepository.findAll(
-                ArgumentMatchers.<Specification<Organization>>any(),
-                any(Pageable.class)
-        )).thenReturn(page);
+        //Mocking a repository call
+        when(organizationRepository.findAll(ArgumentMatchers.<Specification<Organization>>any(), any(Pageable.class))).thenReturn(page);
 
-        when(modelMapper.map(organization, OrganizationDto.class))
-                .thenReturn(organizationDto);
+        //Mocking a modelMapper call
+        when(modelMapper.map(organization, OrganizationDto.class)).thenReturn(organizationDto);
 
+        //Call for testing the whole class
         Map<String, Object> response = organizationService.getAllOrganizations(
                 null,
-                organizationName,
+                ApplicationConstantsTest.mockTestDataCompanyName,
+                null,
                 0,
                 10,
-                "name"
+                "name",
+                "asc"
         );
 
         assertNotNull(response);
@@ -239,13 +242,12 @@ class OrganizationServiceTest {
         PagerDto pager = (PagerDto) response.get("pager");
 
         assertEquals(1, items.size());
-        assertEquals(organizationName, items.getFirst().getName());
+        assertEquals(ApplicationConstantsTest.mockTestDataCompanyName, items.getFirst().getName());
 
         assertEquals(1, pager.totalElements());
         assertEquals(1, pager.totalPages());
 
-        verify(organizationRepository, times(1))
-                .findAll(
+        verify(organizationRepository, times(1)).findAll(
                         ArgumentMatchers.<Specification<Organization>>any(),
                         any(Pageable.class)
                 );
@@ -255,10 +257,10 @@ class OrganizationServiceTest {
     void shouldThrowExceptionWhenOrganizationAlreadyExists() {
 
         OrganizationDto request = OrganizationDto.builder()
-                .name("Panex")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
                 .build();
 
-        when(organizationRepository.existsByNameIgnoreCase("Panex")).thenReturn(true);
+        when(organizationRepository.existsByNameIgnoreCase(ApplicationConstantsTest.mockTestDataCompanyName)).thenReturn(true);
 
         assertThrows(
                 ResourceAlreadyExistsException.class,
@@ -273,11 +275,11 @@ class OrganizationServiceTest {
 
         Organization organization = Organization.builder()
                 .id(UUID.randomUUID())
-                .name("Panex")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
                 .build();
 
         OrganizationDto dto = OrganizationDto.builder()
-                .name("Panex")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
                 .build();
 
         Page<Organization> page = new PageImpl<>(List.of(organization));
@@ -294,9 +296,11 @@ class OrganizationServiceTest {
                 organizationService.getAllOrganizations(
                         null,
                         null,
+                        null,
                         0,
                         10,
-                        "name"
+                        "name",
+                        "asc"
                 );
 
         assertNotNull(response);

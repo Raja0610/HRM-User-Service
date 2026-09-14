@@ -28,7 +28,7 @@ public class AuthorityInitializationListener {
 
             Authority authority = new Authority();
             authority.setName(authorityType);
-            authority.setDescription(authorityType.getDescription());
+            authority.setDescription(authorityType.getType());
             authorityRepository.save(authority);
         }
     }
