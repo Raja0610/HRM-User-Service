@@ -3,10 +3,12 @@ package com.hrm.project.user_service.controller;
 import com.hrm.project.user_service.dto.BranchDto;
 import com.hrm.project.user_service.service.BranchService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -23,18 +25,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/organizations/{organizationId}/branches")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class BranchController {
 
     private final BranchService branchService;
-
-    /**
-     * Constructor-based dependency injection.
-     *
-     * @param branchService service responsible for branch operations
-     */
-    public BranchController(BranchService branchService) {
-        this.branchService = branchService;
-    }
 
     /**
      * Creates a new branch under the specified organization.
@@ -71,22 +65,30 @@ public class BranchController {
      * @param pageNumber     page number
      * @param pageSize       page size
      * @param sortBy         sorting field
+     * @param sortOrder      sorting order
      * @return filtered branch data
      */
     @GetMapping
-    public ResponseEntity<?> getBranches(@PathVariable("organizationId") UUID organizationId,
-                                         @RequestParam(required = false) UUID id,
-                                         @RequestParam(required = false) String name,
-                                         @RequestParam(defaultValue = "0") int pageNumber,
-                                         @RequestParam(required = false) Integer pageSize,
-                                         @RequestParam(defaultValue = "name") String sortBy) {
+    public ResponseEntity<Object> getBranches(@PathVariable("organizationId") UUID organizationId,
+                                              @RequestParam(required = false) UUID id,
+                                              @RequestParam(required = false) String name,
+                                              @RequestParam(required = false) String displayName,
+                                              @RequestParam(defaultValue = "0") int pageNumber,
+                                              @RequestParam(required = false) Integer pageSize,
+                                              @RequestParam(defaultValue = "name") String sortBy,
+                                              @RequestParam(required = false) String sortOrder) {
+
+        Set<String> sortFactor = Set.of("name", "displayName", "establishedIn", "workForce");
+        sortBy = sortFactor.contains(sortBy) ? sortBy : "name";
 
         return ResponseEntity.ok(branchService.getAllBranches(organizationId,
                 id,
                 name,
+                displayName,
                 pageNumber,
                 pageSize,
-                sortBy));
+                sortBy,
+                sortOrder));
     }
 
     /**

@@ -3,10 +3,12 @@ package com.hrm.project.user_service.controller;
 import com.hrm.project.user_service.dto.DepartmentDto;
 import com.hrm.project.user_service.service.DepartmentService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -25,18 +27,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/branches/{branchId}/departments")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class DepartmentController {
 
     private final DepartmentService departmentService;
-
-    /**
-     * Constructor-based dependency injection.
-     *
-     * @param departmentService service responsible for department operations
-     */
-    public DepartmentController(DepartmentService departmentService) {
-        this.departmentService = departmentService;
-    }
 
     /**
      * Creates a new department under the specified branch.
@@ -69,28 +63,37 @@ public class DepartmentController {
      * </ul>
      * </p>
      *
-     * @param branchId   branch identifier
-     * @param id         optional department identifier
-     * @param name       optional department name
-     * @param pageNumber page number
-     * @param pageSize   page size
-     * @param sortBy     sorting field
+     * @param branchId    branch identifier
+     * @param id          optional department identifier
+     * @param name        optional department name
+     * @param displayName optional department display name
+     * @param pageNumber  page number
+     * @param pageSize    page size
+     * @param sortBy      sorting field
+     * @param sortOrder   sorting order
      * @return filtered department data
      */
     @GetMapping
-    public ResponseEntity<?> getDepartments(@PathVariable("branchId") UUID branchId,
-                                            @RequestParam(required = false) UUID id,
-                                            @RequestParam(required = false) String name,
-                                            @RequestParam(defaultValue = "0") int pageNumber,
-                                            @RequestParam(required = false) Integer pageSize,
-                                            @RequestParam(defaultValue = "name") String sortBy) {
+    public ResponseEntity<Object> getDepartments(@PathVariable("branchId") UUID branchId,
+                                                 @RequestParam(required = false) UUID id,
+                                                 @RequestParam(required = false) String name,
+                                                 @RequestParam(required = false) String displayName,
+                                                 @RequestParam(defaultValue = "0") int pageNumber,
+                                                 @RequestParam(required = false) Integer pageSize,
+                                                 @RequestParam(defaultValue = "name") String sortBy,
+                                                 @RequestParam(required = false, defaultValue = "desc") String sortOrder) {
+
+        Set<String> sortFactors = Set.of("name", "displayName", "workForce");
+        sortBy = sortFactors.contains(sortBy) ? sortBy : "displayName";
 
         return ResponseEntity.ok(departmentService.getAllDepartments(branchId,
                         id,
                         name,
+                        displayName,
                         pageNumber,
                         pageSize,
-                        sortBy
+                        sortBy,
+                        sortOrder
                 )
         );
     }

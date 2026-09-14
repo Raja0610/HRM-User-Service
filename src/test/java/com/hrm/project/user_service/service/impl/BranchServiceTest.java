@@ -1,6 +1,8 @@
 package com.hrm.project.user_service.service.impl;
 
 import com.hrm.project.user_service.assembler.BranchAssembler;
+import com.hrm.project.user_service.constants.ApplicationConstants;
+import com.hrm.project.user_service.constants.ApplicationConstantsTest;
 import com.hrm.project.user_service.dto.AddressDto;
 import com.hrm.project.user_service.dto.BranchDto;
 import com.hrm.project.user_service.dto.PagerDto;
@@ -19,16 +21,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -54,20 +54,20 @@ class BranchServiceTest {
 
     private AddressDto getAddressDto() {
         return AddressDto.builder()
-                .addressLine1("Sector 62")
-                .addressLine2("Block A")
-                .city("Noida")
-                .state("UP")
-                .country("India")
-                .postalCode("201301")
+                .addressLine1(ApplicationConstantsTest.mockTestAddressLine1)
+                .addressLine2(ApplicationConstantsTest.mockTestAddressLine2)
+                .city(ApplicationConstantsTest.mockTestAddressCity)
+                .state(ApplicationConstantsTest.mockTestAddressState)
+                .country(ApplicationConstantsTest.mockTestAddressCountry)
+                .postalCode(ApplicationConstantsTest.mockTestDataPostalCode)
                 .build();
     }
 
     private Organization getOrganization(UUID organizationId) {
         return Organization.builder()
                 .id(organizationId)
-                .name("Panex")
-                .displayName("Panex Logistics")
+                .name(ApplicationConstantsTest.mockTestDataCompanyName)
+                .displayName(ApplicationConstantsTest.mockTestDataDisplayName)
                 .active(true)
                 .build();
     }
@@ -75,13 +75,13 @@ class BranchServiceTest {
     private BranchDto getBranchDto(UUID organizationId) {
         return new BranchDto(
                 null,
-                "Noida Branch",
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
+                ApplicationConstantsTest.mockTestDataDisplayName,
                 true,
                 organizationId,
                 null,
-                "branch@test.com",
-                "9999999999",
+                ApplicationConstantsTest.mockTestDataBranchEmail,
+                ApplicationConstantsTest.mockTestDataPhoneNumber,
                 getAddressDto(),
                 100L,
                 Map.of("type", "Warehouse"),
@@ -117,7 +117,7 @@ class BranchServiceTest {
                 .thenReturn(Optional.of(organization));
 
         when(branchRepository.existsByNameIgnoreCaseAndOrganizationId(
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
                 organizationId
         )).thenReturn(true);
 
@@ -135,11 +135,13 @@ class BranchServiceTest {
 
         UUID organizationId = UUID.randomUUID();
 
+        //Creation of organization Entity
         Organization organization = getOrganization(organizationId);
 
+        //Creation of branch entity
         Branch branch = Branch.builder()
                 .id(UUID.randomUUID())
-                .name("Noida Branch")
+                .name(ApplicationConstantsTest.mockTestDataBranchName)
                 .organization(organization)
                 .build();
 
@@ -147,28 +149,25 @@ class BranchServiceTest {
 
         Page<Branch> page = new PageImpl<>(List.of(branch));
 
-        when(organizationRepository.findById(organizationId))
-                .thenReturn(Optional.of(organization));
+        when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
 
-        when(branchRepository.findAll(
-                ArgumentMatchers.<Specification<Branch>>any(),
-                any(Pageable.class)
-        )).thenReturn(page);
+        when(branchRepository.findAll(ArgumentMatchers.<Specification<Branch>>any(), any(Pageable.class))).thenReturn(page);
 
-        when(branchAssembler.toDto(branch))
-                .thenReturn(dto);
+        when(branchAssembler.toDto(branch)).thenReturn(dto);
 
-        Map<String, Object> response =
-                branchService.getAllBranches(
+        Map<String, Object> response = branchService.getAllBranches(
                         organizationId,
                         null,
-                        "Noida Branch",
+                        ApplicationConstantsTest.mockTestDataBranchName,
+                        ApplicationConstantsTest.mockTestDataBranchDisplayName,
                         0,
                         10,
-                        "name"
+                        "name",
+                        "asc"
                 );
 
-        List<?> items = (List<?>) response.get("items");
+        @SuppressWarnings("unchecked")
+        List<BranchDto> items = (List<BranchDto>) response.get("items");
 
         assertEquals(1, items.size());
     }
@@ -183,7 +182,7 @@ class BranchServiceTest {
 
         Branch branch = Branch.builder()
                 .id(branchId)
-                .name("Old Branch")
+                .name(ApplicationConstantsTest.mockTestDataOldBranchName)
                 .organization(organization)
                 .build();
 
@@ -191,7 +190,7 @@ class BranchServiceTest {
         BranchDto response = getBranchDto(organizationId);
 
         Address address = Address.builder()
-                .city("Noida")
+                .city(ApplicationConstantsTest.mockTestAddressCity)
                 .build();
 
         when(branchRepository.findByIdAndOrganizationId(
@@ -200,7 +199,7 @@ class BranchServiceTest {
         )).thenReturn(Optional.of(branch));
 
         when(branchRepository.existsByNameIgnoreCaseAndOrganizationIdAndIdNot(
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
                 organizationId,
                 branchId
         )).thenReturn(false);
@@ -240,9 +239,11 @@ class BranchServiceTest {
                         organizationId,
                         null,
                         null,
+                        null,
                         0,
                         10,
-                        "name"
+                        "name",
+                        "asc"
                 )
         );
     }
@@ -279,13 +280,13 @@ class BranchServiceTest {
         BranchDto request = getBranchDto(organizationId);
 
         Address address = Address.builder()
-                .city("Noida")
+                .city(ApplicationConstantsTest.mockTestAddressCity)
                 .build();
 
         Branch branch = Branch.builder()
                 .id(branchId)
-                .name("Noida Branch")
-                .displayName("Noida Branch")
+                .name(ApplicationConstantsTest.mockTestDataBranchName)
+                .displayName(ApplicationConstantsTest.mockTestDataBranchDisplayName)
                 .organization(organization)
                 .address(address)
                 .active(true)
@@ -293,38 +294,33 @@ class BranchServiceTest {
 
         BranchDto response = new BranchDto(
                 branchId,
-                "Noida Branch",
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
+                ApplicationConstantsTest.mockTestDataBranchDisplayName,
                 true,
                 organizationId,
-                "Panex",
-                "branch@test.com",
-                "9999999999",
+                ApplicationConstantsTest.mockTestDataCompanyName,
+                ApplicationConstantsTest.mockTestDataBranchEmail,
+                ApplicationConstantsTest.mockTestDataPhoneNumber,
                 getAddressDto(),
                 100L,
                 Map.of("type", "Warehouse"),
                 LocalDate.now()
         );
 
-        when(organizationRepository.findById(organizationId))
-                .thenReturn(Optional.of(organization));
+        when(organizationRepository.findById(organizationId)).thenReturn(Optional.of(organization));
 
         when(branchRepository.existsByNameIgnoreCaseAndOrganizationId(
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
                 organizationId
         )).thenReturn(false);
 
-        when(modelMapper.map(any(AddressDto.class), eq(Address.class)))
-                .thenReturn(address);
+        when(modelMapper.map(any(AddressDto.class), eq(Address.class))).thenReturn(address);
 
-        when(branchRepository.save(any(Branch.class)))
-                .thenReturn(branch);
+        when(branchRepository.save(any(Branch.class))).thenReturn(branch);
 
-        when(branchAssembler.toDto(branch))
-                .thenReturn(response);
+        when(branchAssembler.toDto(branch)).thenReturn(response);
 
-        BranchDto result =
-                branchService.createBranch(organizationId, request);
+        BranchDto result = branchService.createBranch(organizationId, request);
 
         assertNotNull(result);
         assertEquals(branchId, result.id());
@@ -341,7 +337,7 @@ class BranchServiceTest {
 
         Branch branch = Branch.builder()
                 .id(UUID.randomUUID())
-                .name("Noida Branch")
+                .name(ApplicationConstantsTest.mockTestDataBranchName)
                 .organization(organization)
                 .build();
 
@@ -365,9 +361,11 @@ class BranchServiceTest {
                         organizationId,
                         null,
                         null,
+                        null,
                         0,
                         10,
-                        "name"
+                        "name",
+                        "asc"
                 );
 
         List<?> items = (List<?>) response.get("items");
@@ -387,7 +385,7 @@ class BranchServiceTest {
 
         Branch branch = Branch.builder()
                 .id(UUID.randomUUID())
-                .name("Noida Branch")
+                .name(ApplicationConstantsTest.mockTestDataBranchName)
                 .organization(organization)
                 .build();
 
@@ -411,9 +409,11 @@ class BranchServiceTest {
                         organizationId,
                         null,
                         null,
+                        null,
                         0,
                         null,
-                        "name"
+                        "name",
+                        null
                 );
 
         List<?> items = (List<?>) response.get("items");
@@ -448,17 +448,18 @@ class BranchServiceTest {
                 any(Pageable.class)
         )).thenReturn(page);
 
-        when(branchAssembler.toDto(branch))
-                .thenReturn(dto);
+        when(branchAssembler.toDto(branch)).thenReturn(dto);
 
         Map<String, Object> response =
                 branchService.getAllBranches(
                         organizationId,
                         branchId,
                         null,
+                        null,
                         0,
                         10,
-                        "name"
+                        "name",
+                        "asc"
                 );
 
         List<?> items = (List<?>) response.get("items");
@@ -482,7 +483,7 @@ class BranchServiceTest {
         )).thenReturn(Optional.of(branch));
 
         when(branchRepository.existsByNameIgnoreCaseAndOrganizationIdAndIdNot(
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
                 organizationId,
                 branchId
         )).thenReturn(true);
@@ -560,6 +561,7 @@ class BranchServiceTest {
         doThrow(RuntimeException.class)
                 .when(branchRepository)
                 .delete(branch);
+
 
         assertThrows(
                 DependentResourceDeleteException.class,

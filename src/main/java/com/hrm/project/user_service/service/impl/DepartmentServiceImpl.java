@@ -13,6 +13,9 @@ import com.hrm.project.user_service.repository.DepartmentRepository;
 import com.hrm.project.user_service.service.DepartmentService;
 import com.hrm.project.user_service.specification.DepartmentSpecification;
 import com.hrm.project.user_service.utils.JsonUtils;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -34,26 +37,13 @@ import java.util.*;
  * </p>
  */
 @Service
+@RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
     private final BranchRepository branchRepository;
     private final DepartmentAssembler departmentAssembler;
-
-    /**
-     * Constructor-based dependency injection.
-     *
-     * @param departmentRepository department repository
-     * @param branchRepository     branch repository
-     * @param departmentAssembler  department assembler
-     */
-    public DepartmentServiceImpl(DepartmentRepository departmentRepository,
-                                 BranchRepository branchRepository,
-                                 DepartmentAssembler departmentAssembler) {
-        this.departmentRepository = departmentRepository;
-        this.branchRepository = branchRepository;
-        this.departmentAssembler = departmentAssembler;
-    }
+    private final ResourceBundleMessageSource messageSource;
 
     /**
      * Creates a new department under the specified branch.
@@ -63,7 +53,6 @@ public class DepartmentServiceImpl implements DepartmentService {
      * @return created department
      */
     @Override
-    @Transactional
     public DepartmentDto createDepartment(UUID branchId,
                                           DepartmentDto departmentDto) {
 
@@ -76,10 +65,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                 branchId
         )) {
             throw new ResourceAlreadyExistsException(
-                    "Department already exists with name : "
-                            + departmentDto.name()
-                            + " under branch : "
-                            + branch.getName()
+                    "Department", "name", departmentDto.name()
             );
         }
 
@@ -110,22 +96,25 @@ public class DepartmentServiceImpl implements DepartmentService {
      * </ul>
      * </p>
      *
-     * @param branchId   branch identifier
-     * @param id         optional department identifier
-     * @param name       optional department name
-     * @param pageNumber page number
-     * @param pageSize   page size
-     * @param sortBy     sorting field
+     * @param branchId    branch identifier
+     * @param id          optional department identifier
+     * @param name        optional department name
+     * @param displayName optional department display name
+     * @param pageNumber  page number
+     * @param pageSize    page size
+     * @param sortBy      sorting field
+     * @param sortOrder   sorting order
      * @return paginated department response
      */
     @Override
-    @Transactional(readOnly = true)
     public Map<String, Object> getAllDepartments(UUID branchId,
                                                  UUID id,
                                                  String name,
+                                                 String displayName,
                                                  int pageNumber,
                                                  Integer pageSize,
-                                                 String sortBy) {
+                                                 String sortBy,
+                                                 String sortOrder) {
 
         branchRepository.findById(branchId).orElseThrow(
                 () -> new ResourceNotFoundException("Branch", "id", branchId)
@@ -133,20 +122,18 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         Specification<Department> specification = Specification.unrestricted();
 
-        specification = specification.and(
-                DepartmentSpecification.belongsToBranch(branchId)
-        );
+        specification = specification.and(DepartmentSpecification.belongsToBranch(branchId));
 
         if (Objects.nonNull(id)) {
-            specification = specification.and(
-                    DepartmentSpecification.hasId(id)
-            );
+            specification = specification.and(DepartmentSpecification.hasId(id));
         }
 
-        if (Objects.nonNull(name)) {
-            specification = specification.and(
-                    DepartmentSpecification.hasName(name)
-            );
+        if (Objects.nonNull(name) && !name.isBlank()) {
+            specification = specification.and(DepartmentSpecification.hasName(name));
+        }
+
+        if (Objects.nonNull(displayName) && !displayName.isBlank()) {
+            specification = specification.and(DepartmentSpecification.hasDisplayName(displayName));
         }
 
         Pageable pageable = (pageSize == null || pageSize <= 0)
@@ -154,11 +141,10 @@ public class DepartmentServiceImpl implements DepartmentService {
                 : PageRequest.of(
                 pageNumber,
                 pageSize,
-                Sort.by(Sort.Direction.ASC, sortBy)
+                Sort.by(Sort.Direction.fromString(sortOrder), sortBy)
         );
 
-        Page<Department> page =
-                departmentRepository.findAll(specification, pageable);
+        Page<Department> page = departmentRepository.findAll(specification, pageable);
 
         PagerDto pager = new PagerDto(
                 page.getTotalElements(),
@@ -185,7 +171,6 @@ public class DepartmentServiceImpl implements DepartmentService {
      * @return updated department
      */
     @Override
-    @Transactional
     public DepartmentDto updateDepartment(UUID branchId,
                                           UUID id,
                                           DepartmentDto departmentDto) {
@@ -209,9 +194,7 @@ public class DepartmentServiceImpl implements DepartmentService {
                 )) {
 
             throw new ResourceAlreadyExistsException(
-                    "Department already exists with name : "
-                            + departmentDto.name()
-                            + " under this branch"
+                    "Department", "name", departmentDto.name()
             );
         }
 
@@ -233,16 +216,13 @@ public class DepartmentServiceImpl implements DepartmentService {
      *
      * @param branchId branch identifier
      * @param id       department identifier
-     * @throws ResourceNotFoundException if department does not exist
+     * @throws ResourceNotFoundException        if department does not exist
      * @throws DependentResourceDeleteException if department is referenced by another entity
      */
     @Override
-    @Transactional
     public void deleteDepartment(UUID branchId, UUID id) {
 
-        Department department = departmentRepository
-                .findByIdAndBranchId(id, branchId)
-                .orElseThrow(
+        Department department = departmentRepository.findByIdAndBranchId(id, branchId).orElseThrow(
                         () -> new ResourceNotFoundException(
                                 "Department",
                                 "id",
@@ -253,9 +233,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         try {
             departmentRepository.delete(department);
         } catch (Exception e) {
-            throw new DependentResourceDeleteException(
-                    "Entity is already referenced"
-            );
+            throw new DependentResourceDeleteException(messageSource.getMessage("entity.referenced", null, LocaleContextHolder.getLocale()));
         }
     }
 }
