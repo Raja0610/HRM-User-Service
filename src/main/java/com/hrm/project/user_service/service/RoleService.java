@@ -3,6 +3,7 @@ package com.hrm.project.user_service.service;
 import com.hrm.project.user_service.dto.RoleDto;
 import jakarta.validation.Valid;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -14,6 +15,8 @@ public interface RoleService {
                                  int pageNumber, Integer pageSize, String sortBy);
 
     RoleDto updateRole(UUID organizationId, UUID roleId, @Valid RoleDto roleDto);
+
+    RoleDto updateRoleAuthorities(UUID organizationId, UUID roleId, List<UUID> authorityIds);
 
     void deleteRole(UUID organizationId, UUID roleId);
 

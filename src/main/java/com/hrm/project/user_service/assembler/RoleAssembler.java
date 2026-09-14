@@ -1,6 +1,7 @@
 package com.hrm.project.user_service.assembler;
 
 import com.hrm.project.user_service.dto.RoleDto;
+import com.hrm.project.user_service.entity.Authority;
 import com.hrm.project.user_service.entity.Role;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,12 @@ public class RoleAssembler implements BaseAssembler<Role, RoleDto> {
                 role.getName(),
                 role.getDisplayName(),
                 role.getDescription(),
-                role.getOrganization() == null ? null : role.getOrganization().getId()
+                role.getOrganization() == null ? null : role.getOrganization().getId(),
+                role.getAuthorities()
+                        .stream()
+                        .map(Authority::getId)
+                        .toList(),
+                role.getAuthorities().stream().map(Authority::getName).toList()
         );
     }
 
