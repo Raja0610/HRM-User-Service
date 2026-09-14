@@ -1,8 +1,10 @@
 package com.hrm.project.user_service.dto;
 
+import com.hrm.project.user_service.enums.AuthorityType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
 import java.util.UUID;
 
 /** DTO used to create, update, and return organization roles. */
@@ -16,6 +18,8 @@ public record RoleDto(
         String displayName,
         @Size(max = 500, message = "Role description must not exceed 500 characters")
         String description,
-        UUID organizationId
+        UUID organizationId,
+        List<UUID> authorityIds,
+        List<String> authorityNames
 ) {
 }

@@ -3,15 +3,18 @@ package com.hrm.project.user_service.service.impl;
 import com.hrm.project.user_service.assembler.RoleAssembler;
 import com.hrm.project.user_service.dto.PagerDto;
 import com.hrm.project.user_service.dto.RoleDto;
+import com.hrm.project.user_service.entity.Authority;
 import com.hrm.project.user_service.entity.Organization;
 import com.hrm.project.user_service.entity.Role;
 import com.hrm.project.user_service.exceptions.DependentResourceDeleteException;
 import com.hrm.project.user_service.exceptions.ResourceAlreadyExistsException;
 import com.hrm.project.user_service.exceptions.ResourceNotFoundException;
 import com.hrm.project.user_service.repository.OrganizationRepository;
+import com.hrm.project.user_service.repository.AuthorityRepository;
 import com.hrm.project.user_service.repository.RoleRepository;
 import com.hrm.project.user_service.service.RoleService;
 import com.hrm.project.user_service.specification.RoleSpecification;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,25 +25,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
     private final OrganizationRepository organizationRepository;
+    private final AuthorityRepository authorityRepository;
     private final RoleAssembler roleAssembler;
-
-    public RoleServiceImpl(RoleRepository roleRepository,
-                           OrganizationRepository organizationRepository,
-                           RoleAssembler roleAssembler) {
-        this.roleRepository = roleRepository;
-        this.organizationRepository = organizationRepository;
-        this.roleAssembler = roleAssembler;
-    }
 
     @Override
     @Transactional
@@ -94,6 +92,28 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
+    public RoleDto updateRoleAuthorities(UUID organizationId, UUID roleId, List<UUID> authorityIds) {
+        Role role = findRole(organizationId, roleId);
+        LinkedHashSet<UUID> requestedAuthorityIds = new LinkedHashSet<>(authorityIds);
+        List<Authority> authorities = authorityRepository.findAllById(requestedAuthorityIds);
+
+        if (authorities.size() != requestedAuthorityIds.size()) {
+            HashSet<UUID> foundAuthorityIds = new HashSet<>();
+            authorities.forEach(authority -> foundAuthorityIds.add(authority.getId()));
+            UUID missingAuthorityId = requestedAuthorityIds.stream()
+                    .filter(authorityId -> !foundAuthorityIds.contains(authorityId))
+                    .findFirst()
+                    .orElseThrow();
+            throw new ResourceNotFoundException("Authority", "id", missingAuthorityId);
+        }
+
+        role.getAuthorities().clear();
+        role.getAuthorities().addAll(authorities);
+        return roleAssembler.toDto(role);
+    }
+
+    @Override
+    @Transactional
     public void deleteRole(UUID organizationId, UUID roleId) {
         Role role = findRole(organizationId, roleId);
         try {
@@ -121,7 +141,7 @@ public class RoleServiceImpl implements RoleService {
                 ? roleRepository.existsByNameIgnoreCase(roleDto.name())
                 : roleRepository.existsByNameIgnoreCaseAndIdNot(roleDto.name(), roleId);
         if (duplicateName) {
-            throw new ResourceAlreadyExistsException("Role already exists with name: " + roleDto.name());
+            throw new ResourceAlreadyExistsException("Role", "name", roleDto.name());
         }
     }
 }
