@@ -1,9 +1,7 @@
 package com.hrm.project.user_service.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -30,6 +28,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder(toBuilder = true)
 public class Department {
 
     /**
@@ -47,7 +47,7 @@ public class Department {
      * Engineering
      * Finance
      */
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
     /**
@@ -63,13 +63,13 @@ public class Department {
     /**
      * Indicates whether the department is active.
      */
-    @Column(nullable = false)
-    private Boolean active = true;
+    @Column
+    private Boolean active;
 
     /**
      * Workforce count or workforce information.
      */
-    @Column
+    @Column(name = "current_workforce")
     private Long workforce=0L;
 
     /**

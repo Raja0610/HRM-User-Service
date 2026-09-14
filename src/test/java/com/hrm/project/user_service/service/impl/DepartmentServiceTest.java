@@ -1,6 +1,7 @@
 package com.hrm.project.user_service.service.impl;
 
 import com.hrm.project.user_service.assembler.DepartmentAssembler;
+import com.hrm.project.user_service.constants.ApplicationConstantsTest;
 import com.hrm.project.user_service.dto.DepartmentDto;
 import com.hrm.project.user_service.dto.PagerDto;
 import com.hrm.project.user_service.entity.Branch;
@@ -16,14 +17,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -44,6 +42,9 @@ class DepartmentServiceTest {
     @InjectMocks
     private DepartmentServiceImpl departmentService;
 
+    @Mock
+    private ResourceBundleMessageSource messageSource;
+
     @Test
     void createDepartmentSuccess() {
 
@@ -51,19 +52,19 @@ class DepartmentServiceTest {
 
         Branch branch = new Branch();
         branch.setId(branchId);
-        branch.setName("Noida Branch");
+        branch.setName(ApplicationConstantsTest.mockTestDataBranchName);
 
         Department department = new Department();
-        department.setName("Engineering");
-        department.setDisplayName("Engineering Department");
+        department.setName(ApplicationConstantsTest.mockTestDataDepartmentName);
+        department.setDisplayName(ApplicationConstantsTest.mockTestDataDepartmentDisplayName);
         department.setActive(true);
         department.setWorkforce(100L);
         department.setBranch(branch);
 
         DepartmentDto request = new DepartmentDto(
                 null,
-                "Engineering",
-                "Engineering Department",
+                ApplicationConstantsTest.mockTestDataDepartmentName,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayName,
                 true,
                 null,
                 null,
@@ -73,20 +74,19 @@ class DepartmentServiceTest {
 
         DepartmentDto response = new DepartmentDto(
                 UUID.randomUUID(),
-                "Engineering",
-                "Engineering Department",
+                ApplicationConstantsTest.mockTestDataDepartmentName,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayName,
                 true,
                 branchId,
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchDisplayName,
                 100L,
                 Map.of("shift", "Day")
         );
 
-        when(branchRepository.findById(branchId))
-                .thenReturn(Optional.of(branch));
+        when(branchRepository.findById(branchId)).thenReturn(Optional.of(branch));
 
         when(departmentRepository.existsByNameIgnoreCaseAndBranchId(
-                "Engineering",
+                ApplicationConstantsTest.mockTestDataDepartmentName,
                 branchId))
                 .thenReturn(false);
 
@@ -100,7 +100,7 @@ class DepartmentServiceTest {
                 departmentService.createDepartment(branchId, request);
 
         assertNotNull(result);
-        assertEquals("Engineering", result.name());
+        assertEquals(ApplicationConstantsTest.mockTestDataDepartmentName, result.name());
 
         verify(departmentRepository).save(any(Department.class));
     }
@@ -115,8 +115,8 @@ class DepartmentServiceTest {
 
         DepartmentDto request = new DepartmentDto(
                 null,
-                "Engineering",
-                "Engineering Department",
+                ApplicationConstantsTest.mockTestDataDepartmentName,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayName,
                 true,
                 null,
                 null,
@@ -137,20 +137,20 @@ class DepartmentServiceTest {
 
         Branch branch = new Branch();
         branch.setId(branchId);
-        branch.setName("Noida Branch");
+        branch.setName(ApplicationConstantsTest.mockTestDataBranchName);
 
         when(branchRepository.findById(branchId))
                 .thenReturn(Optional.of(branch));
 
         when(departmentRepository.existsByNameIgnoreCaseAndBranchId(
-                "Engineering",
+                ApplicationConstantsTest.mockTestDataDepartmentName,
                 branchId))
                 .thenReturn(true);
 
         DepartmentDto request = new DepartmentDto(
                 null,
-                "Engineering",
-                "Engineering Department",
+                ApplicationConstantsTest.mockTestDataDepartmentName,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayName,
                 true,
                 null,
                 null,
@@ -176,11 +176,11 @@ class DepartmentServiceTest {
 
         DepartmentDto dto = new DepartmentDto(
                 UUID.randomUUID(),
-                "Engineering",
-                "Engineering Department",
+                ApplicationConstantsTest.mockTestDataDepartmentName,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayName,
                 true,
                 branchId,
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
                 100L,
                 Map.of()
         );
@@ -204,9 +204,11 @@ class DepartmentServiceTest {
                         branchId,
                         null,
                         null,
+                        null,
                         0,
                         10,
-                        "name"
+                        "name",
+                        "asc"
                 );
 
         assertNotNull(result);
@@ -232,9 +234,11 @@ class DepartmentServiceTest {
                         branchId,
                         null,
                         null,
+                        null,
                         0,
                         10,
-                        "name"
+                        "name",
+                        null
                 )
         );
     }
@@ -254,22 +258,22 @@ class DepartmentServiceTest {
 
         DepartmentDto request = new DepartmentDto(
                 departmentId,
-                "HR",
-                "Human Resources",
+                ApplicationConstantsTest.mockTestDataDepartmentNameHR,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayNameHR,
                 true,
                 branchId,
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
                 50L,
                 Map.of()
         );
 
         DepartmentDto response = new DepartmentDto(
                 departmentId,
-                "HR",
-                "Human Resources",
+                ApplicationConstantsTest.mockTestDataDepartmentNameHR,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayNameHR,
                 true,
                 branchId,
-                "Noida Branch",
+                ApplicationConstantsTest.mockTestDataBranchName,
                 50L,
                 Map.of()
         );
@@ -280,7 +284,7 @@ class DepartmentServiceTest {
                 .thenReturn(Optional.of(department));
 
         when(departmentRepository.existsByNameIgnoreCaseAndBranchIdAndIdNot(
-                "HR",
+                ApplicationConstantsTest.mockTestDataDepartmentNameHR,
                 branchId,
                 departmentId))
                 .thenReturn(false);
@@ -299,7 +303,7 @@ class DepartmentServiceTest {
                 );
 
         assertNotNull(result);
-        assertEquals("HR", result.name());
+        assertEquals(ApplicationConstantsTest.mockTestDataDepartmentNameHR, result.name());
     }
 
     @Test
@@ -315,8 +319,8 @@ class DepartmentServiceTest {
 
         DepartmentDto request = new DepartmentDto(
                 null,
-                "HR",
-                "Human Resources",
+                ApplicationConstantsTest.mockTestDataDepartmentNameHR,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayNameHR,
                 true,
                 null,
                 null,
@@ -348,15 +352,15 @@ class DepartmentServiceTest {
                 .thenReturn(Optional.of(department));
 
         when(departmentRepository.existsByNameIgnoreCaseAndBranchIdAndIdNot(
-                "HR",
+                ApplicationConstantsTest.mockTestDataDepartmentNameHR,
                 branchId,
                 departmentId))
                 .thenReturn(true);
 
         DepartmentDto request = new DepartmentDto(
                 null,
-                "HR",
-                "Human Resources",
+                ApplicationConstantsTest.mockTestDataDepartmentNameHR,
+                ApplicationConstantsTest.mockTestDataDepartmentDisplayNameHR,
                 true,
                 null,
                 null,
@@ -424,6 +428,7 @@ class DepartmentServiceTest {
         UUID departmentId = UUID.randomUUID();
 
         Department department = new Department();
+        department.setId(departmentId);
 
         when(departmentRepository.findByIdAndBranchId(
                 departmentId,
@@ -433,6 +438,13 @@ class DepartmentServiceTest {
         doThrow(new RuntimeException())
                 .when(departmentRepository)
                 .delete(department);
+
+        when(messageSource.getMessage(
+                eq("entity.referenced"),
+                isNull(),
+                any(Locale.class)
+        )).thenReturn("Branch could not be deleted because it is referenced.");
+
 
         assertThrows(
                 DependentResourceDeleteException.class,
@@ -465,10 +477,12 @@ class DepartmentServiceTest {
                 departmentService.getAllDepartments(
                         branchId,
                         null,
-                        "Engineering",
+                        ApplicationConstantsTest.mockTestDataDepartmentName,
+                        null,
                         0,
                         10,
-                        "name"
+                        "name",
+                        "asc"
                 );
 
         assertNotNull(result);
@@ -493,15 +507,16 @@ class DepartmentServiceTest {
                 Mockito.any(Pageable.class)
         )).thenReturn(page);
 
-        Map<String, Object> result =
-                departmentService.getAllDepartments(
-                        branchId,
-                        departmentId,
-                        null,
-                        0,
-                        10,
-                        "name"
-                );
+        Map<String, Object> result = departmentService.getAllDepartments(
+                branchId,
+                departmentId,
+                null,
+                null,
+                0,
+                10,
+                "name",
+                "asc"
+        );
 
         assertNotNull(result);
     }

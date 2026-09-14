@@ -15,7 +15,7 @@ public interface BranchService {
      * Creates a new branch under the specified organization.
      *
      * @param organizationId organization identifier
-     * @param branchDto branch creation request
+     * @param branchDto      branch creation request
      * @return created branch
      */
     BranchDto createBranch(UUID organizationId, @Valid BranchDto branchDto);
@@ -24,21 +24,23 @@ public interface BranchService {
      * Retrieves branches using optional filters and pagination.
      *
      * @param organizationId organization identifier
-     * @param id branch identifier
-     * @param name branch name
-     * @param pageNumber page number
-     * @param pageSize page size
-     * @param sortBy field used for sorting
+     * @param id             branch identifier
+     * @param name           branch name
+     * @param displayName    branch display name
+     * @param pageNumber     page number
+     * @param pageSize       page size
+     * @param sortBy         field used for sorting
+     * @param sortOrder      field used for sorting order
      * @return response containing pager and items
      */
-    Map<String, Object> getAllBranches(UUID organizationId, UUID id, String name, int pageNumber, Integer pageSize, String sortBy);
+    Map<String, Object> getAllBranches(UUID organizationId, UUID id, String name, String displayName, int pageNumber, Integer pageSize, String sortBy, String sortOrder);
 
     /**
      * Updates an existing branch.
      *
      * @param organizationId organization identifier
-     * @param id branch identifier
-     * @param branchDto updated branch details
+     * @param id             branch identifier
+     * @param branchDto      updated branch details
      * @return updated branch
      */
     BranchDto updateBranch(UUID organizationId, UUID id, @Valid BranchDto branchDto);
@@ -47,7 +49,7 @@ public interface BranchService {
      * Deletes an existing branch.
      *
      * @param organizationId organization identifier
-     * @param id branch identifier
+     * @param id             branch identifier
      */
     void deleteBranch(UUID organizationId, UUID id);
 }

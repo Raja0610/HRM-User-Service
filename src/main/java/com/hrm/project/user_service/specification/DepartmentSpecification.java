@@ -87,4 +87,9 @@ public final class DepartmentSpecification {
                         "%" + name.toLowerCase() + "%"
                 );
     }
+
+    public static Specification<Department> hasDisplayName(String displayName) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.like(root.get(displayName), "%"+displayName+"%");
+    }
 }

@@ -45,20 +45,24 @@ public interface DepartmentService {
      * Also supports pagination and sorting.
      * </p>
      *
-     * @param branchId   branch identifier
-     * @param id         optional department identifier
-     * @param name       optional department name
-     * @param pageNumber page number
-     * @param pageSize   page size
-     * @param sortBy     sorting field
+     * @param branchId    branch identifier
+     * @param id          optional department identifier
+     * @param name        optional department name
+     * @param displayName optional department display name
+     * @param pageNumber  page number
+     * @param pageSize    page size
+     * @param sortBy      sorting field
+     * @param sortOrder   sorting order
      * @return filtered department response
      */
     Map<String, Object> getAllDepartments(UUID branchId,
                                           UUID id,
                                           String name,
+                                          String displayName,
                                           int pageNumber,
                                           Integer pageSize,
-                                          String sortBy
+                                          String sortBy,
+                                          String sortOrder
     );
 
     /**

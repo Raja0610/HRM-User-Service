@@ -14,7 +14,10 @@ import com.hrm.project.user_service.repository.BranchRepository;
 import com.hrm.project.user_service.repository.OrganizationRepository;
 import com.hrm.project.user_service.service.BranchService;
 import com.hrm.project.user_service.specification.BranchSpecification;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -26,22 +29,14 @@ import java.util.*;
  * Service implementation responsible for Branch management operations.
  */
 @Service
+@RequiredArgsConstructor
 public class BranchServiceImpl implements BranchService {
 
     private final BranchRepository branchRepository;
     private final OrganizationRepository organizationRepository;
     private final BranchAssembler branchAssembler;
     private final ModelMapper modelMapper;
-
-    public BranchServiceImpl(BranchRepository branchRepository,
-                             OrganizationRepository organizationRepository,
-                             BranchAssembler branchAssembler,
-                             ModelMapper modelMapper) {
-        this.branchRepository = branchRepository;
-        this.organizationRepository = organizationRepository;
-        this.branchAssembler = branchAssembler;
-        this.modelMapper = modelMapper;
-    }
+    private final ResourceBundleMessageSource messageSource;
 
     /**
      * Creates a new branch under an organization.
@@ -51,7 +46,6 @@ public class BranchServiceImpl implements BranchService {
      * @return created branch
      */
     @Override
-    @Transactional
     public BranchDto createBranch(UUID organizationId, BranchDto branchDto) {
 
         Organization organization = organizationRepository.findById(organizationId).orElseThrow(
@@ -59,9 +53,7 @@ public class BranchServiceImpl implements BranchService {
         );
 
         if (branchRepository.existsByNameIgnoreCaseAndOrganizationId(branchDto.name(), organizationId)) {
-            throw new ResourceAlreadyExistsException("Branch already exists with name : " + branchDto.name()
-                    + " under organization : " + organization.getName()
-            );
+            throw new ResourceAlreadyExistsException("Branch", "name", branchDto.name());
         }
 
         Branch branch = Branch.builder()
@@ -86,13 +78,16 @@ public class BranchServiceImpl implements BranchService {
      * Retrieves branches using optional filters and pagination.
      */
     @Override
-    @Transactional(readOnly = true)
     public Map<String, Object> getAllBranches(UUID organizationId,
                                               UUID id,
                                               String name,
+                                              String displayName,
                                               int pageNumber,
                                               Integer pageSize,
-                                              String sortBy) {
+                                              String sortBy,
+                                              String sortOrder) {
+
+        //Validating the existence of organization
         Organization organization = organizationRepository.findById(organizationId).orElseThrow(
                 () -> new ResourceNotFoundException("Organization", "id", organizationId)
         );
@@ -105,13 +100,17 @@ public class BranchServiceImpl implements BranchService {
             specification = specification.and(BranchSpecification.hasId(id));
         }
 
-        if (Objects.nonNull(name)) {
+        if (Objects.nonNull(name) && !name.isBlank()) {
             specification = specification.and(BranchSpecification.hasName(name));
+        }
+
+        if (Objects.nonNull(displayName) && !displayName.isBlank()){
+            specification = specification.and(BranchSpecification.hasDisplayName(displayName));
         }
 
         Pageable pageable = (pageSize == null || pageSize <= 0)
                 ? Pageable.unpaged()
-                : PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.ASC, sortBy));
+                : PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.fromString(sortOrder), sortBy));
 
         Page<Branch> page = branchRepository.findAll(specification, pageable);
 
@@ -135,7 +134,6 @@ public class BranchServiceImpl implements BranchService {
      * Updates an existing branch.
      */
     @Override
-    @Transactional
     public BranchDto updateBranch(UUID organizationId,
                                   UUID id,
                                   BranchDto branchDto) {
@@ -145,7 +143,7 @@ public class BranchServiceImpl implements BranchService {
         );
 
         if (branchDto.name() != null && branchRepository.existsByNameIgnoreCaseAndOrganizationIdAndIdNot(branchDto.name(), organizationId, id)) {
-            throw new ResourceAlreadyExistsException("Branch already exists with name : " + branchDto.name() + " under this organization");
+            throw new ResourceAlreadyExistsException("Branch",  "name", branchDto.name());
         }
 
         branch.setName(branchDto.name());
@@ -167,7 +165,6 @@ public class BranchServiceImpl implements BranchService {
      * Deletes an existing branch.
      */
     @Override
-    @Transactional
     public void deleteBranch(UUID organizationId, UUID id) {
 
         Branch branch = branchRepository.findByIdAndOrganizationId(id, organizationId).orElseThrow(
@@ -176,7 +173,10 @@ public class BranchServiceImpl implements BranchService {
         try {
             branchRepository.delete(branch);
         } catch (Exception e) {
-            throw new DependentResourceDeleteException("Entity is already referenced");
+            String message = messageSource == null
+                    ? "Branch could not be deleted because it is referenced."
+                    : messageSource.getMessage("entity.referenced", null, LocaleContextHolder.getLocale());
+            throw new DependentResourceDeleteException(message);
         }
     }
 }

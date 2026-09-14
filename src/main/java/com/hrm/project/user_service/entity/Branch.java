@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -17,16 +19,16 @@ public class Branch {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(nullable = false, updatable = false)
+    @Column
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @Column(nullable = false)
     private String displayName;
 
-    @Column(nullable = false)
+    @Column
     private boolean active;
 
     /**
@@ -48,7 +50,7 @@ public class Branch {
     @Embedded
     private Address address;
 
-    @Column
+    @Column(name = "current_workforce")
     private Long workForce = 0L;
 
     /**
@@ -59,9 +61,12 @@ public class Branch {
      * "shiftCount": 3
      * }
      */
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "TEXT")
     private String specialAttributes;
 
     @Column
     private LocalDate establishedIn;
+
+    @OneToMany(mappedBy = "branch", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Department> roles = new ArrayList<>();
 }

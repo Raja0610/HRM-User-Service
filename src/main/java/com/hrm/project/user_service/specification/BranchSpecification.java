@@ -11,7 +11,7 @@ import java.util.UUID;
  * Provides reusable JPA Specifications that can be combined
  * to build flexible search queries for Branch entities.
  * </p>
- *
+ * <p>
  * Supported filters:
  * <ul>
  *     <li>Organization ownership</li>
@@ -57,7 +57,7 @@ public final class BranchSpecification {
 
     /**
      * Filters branches using a case-insensitive partial name match.
-     *
+     * <p>
      * Example:
      * <pre>
      * name = "del"
@@ -71,9 +71,11 @@ public final class BranchSpecification {
      */
     public static Specification<Branch> hasName(String name) {
         return (root, query, criteriaBuilder) ->
-                criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("name")),
-                        "%" + name.toLowerCase() + "%"
-                );
+                criteriaBuilder.like(root.get("name"), "%" + name + "%");
+    }
+
+    public static Specification<Branch> hasDisplayName(String displayName) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.like(root.get("displayName"), "%" + displayName + "%");
     }
 }

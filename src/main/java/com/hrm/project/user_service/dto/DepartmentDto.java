@@ -41,7 +41,7 @@ public record DepartmentDto(
          * Active status.
          */
         @NotNull(message = "Department status is required")
-        Boolean active,
+        boolean active,
 
         /*
          * Parent branch identifier.
